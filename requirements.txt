@@ -1,0 +1,7 @@
+gdown
+mysql-connector-python
+pandas
+matplotlib
+dataframe_image
+ipykernel
+squarify
