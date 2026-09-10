@@ -2,6 +2,40 @@
 
 <img width="959" height="815" alt="image" src="https://github.com/user-attachments/assets/6202e4de-6521-4fcb-aaae-54d57a2a8fd9" />
 
+## Como executar este projeto
+
+1. **Clone este repositório** em seu computador.
+
+2. **Abra o MySQL Workbench** e conecte-se ao banco de dados que será utilizado no projeto.
+
+3. **Execute o arquivo `01-carga-staging.sql`** no MySQL Workbench.
+   Este arquivo é responsável pela **criação e carga dos dados** nas tabelas de staging:
+
+   * `stg_pedido`
+   * `stg_loja`
+   * `stg_loja_praca`
+
+4. **Execute o arquivo `02-dimensoes-prontas.sql`** no MySQL Workbench.
+   Este arquivo é responsável pela **criação e carga inicial** das tabelas:
+
+   * `dim_tempo`
+   * `dim_loja`
+
+   Além disso, realiza a **criação** das seguintes tabelas:
+
+   * `dim_categoria`
+   * `dim_praca`
+   * `bridge_loja_praca`
+   * `fato_pedido`
+
+5. **Execute o arquivo `03-dimensoes.sql`** no MySQL Workbench.
+   Este arquivo é responsável pela **padronização e carga** das tabelas:
+
+   * `dim_categoria`
+   * `dim_praca`
+   * `bridge_loja_praca`
+
+
 ## Etapa 01 Diagnóstico da origem
 
 ## Inconsistências identificadas nos dados
