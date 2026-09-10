@@ -35,6 +35,60 @@ USE dw_pata_amiga;
 
 -- >>> ESCREVA AQUI: a linha -1 e o INSERT ... SELECT da dim_categoria
 
+INSERT INTO dim_categoria (
+    sk_categoria,
+    categoria_origem,
+    nome_categoria,
+    grupo_categoria
+)
+VALUES (
+    -1,
+    'Nao Informado',
+    'Nao Informado',
+    'Nao Informado'
+);
+
+INSERT INTO dim_categoria (
+    categoria_origem,
+    nome_categoria,
+    grupo_categoria
+)
+SELECT DISTINCT
+    TRIM(CategoriaProduto) AS categoria_origem,
+    CASE
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%MED%' THEN 'Medicamento'
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%RAC%' THEN 'Racao'
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%PETISC%' THEN 'Petisco'
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%HIG%' THEN 'Higiene'
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%BRINQ%' THEN 'Brinquedo'
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%ACESS%' THEN 'Acessorio'
+        WHEN UPPER(TRIM(CategoriaProduto)) LIKE '%SERV%' THEN 'Servico'
+        ELSE 'Nao Informado'
+    END AS nome_categoria,
+    CASE
+        WHEN
+            UPPER(TRIM(CategoriaProduto)) LIKE '%MED%'
+                OR UPPER(TRIM(CategoriaProduto)) LIKE '%HIG%'
+        THEN
+            'Saude e Higiene'
+        WHEN
+            UPPER(TRIM(CategoriaProduto)) LIKE '%RAC%'
+                OR UPPER(TRIM(CategoriaProduto)) LIKE '%PETISC%'
+        THEN
+            'Alimentacao'
+        WHEN
+            UPPER(TRIM(CategoriaProduto)) LIKE '%BRINQ%'
+                OR UPPER(TRIM(CategoriaProduto)) LIKE '%ACESS%'
+                OR UPPER(TRIM(CategoriaProduto)) LIKE '%SERV%'
+        THEN
+            'Bem-estar'
+        ELSE 'Nao Informado'
+    END AS grupo_categoria
+FROM
+    stg_pedido
+WHERE
+    CategoriaProduto IS NOT NULL
+        AND TRIM(CategoriaProduto) <> '';
 
 -- =====================================================================================
 --  DIM_PRACA  +  BRIDGE_LOJA_PRACA
@@ -46,6 +100,37 @@ USE dw_pata_amiga;
 
 -- >>> ESCREVA AQUI: a linha -1 e o INSERT ... SELECT da dim_praca
 
+INSERT INTO dim_praca (
+    sk_praca,
+    cod_praca,
+    nome_praca,
+    regional,
+    domicilios_com_pet
+)
+VALUES (
+    -1,
+    '-1',
+    'Nao Informado',
+    'Nao Informado',
+    NULL
+);
+
+INSERT INTO dim_praca (
+    cod_praca,
+    nome_praca,
+    regional,
+    domicilios_com_pet
+)
+SELECT
+    CodPraca AS cod_praca,
+    MAX(NomePraca) AS nome_praca,
+    MAX(Regional) AS regional,
+    CAST(
+        REPLACE(MAX(DomiciliosComPet), '.', '')
+        AS UNSIGNED
+    ) AS domicilios_com_pet
+FROM stg_loja_praca
+GROUP BY CodPraca;
 
 -- -------------------------------------------------------------------------------------
 --  A TABELA PONTE
@@ -56,6 +141,18 @@ USE dw_pata_amiga;
 
 -- >>> ESCREVA AQUI: o INSERT ... SELECT da bridge_loja_praca
 
+INSERT INTO bridge_loja_praca (
+    cod_loja,
+    sk_praca,
+    fator_publico
+)
+SELECT
+    slp.`CodLoja`,
+    dp.sk_praca,
+    CAST(slp.`PercentualPublico` AS DECIMAL(6,4))
+FROM stg_loja_praca AS slp
+INNER JOIN dim_praca AS dp
+    ON dp.cod_praca = slp.`CodPraca`;
 
 -- =====================================================================================
 --  Confira o resultado com o 00-conferencia.sql (bloco "DEPOIS DO 03").
