@@ -149,7 +149,7 @@ INSERT INTO bridge_loja_praca (
 SELECT
     slp.`CodLoja`,
     dp.sk_praca,
-    CAST(slp.`PercentualPublico` AS DECIMAL(6,4))
+	CAST(REPLACE(slp.`PercentualPublico`, ',', '.') AS DECIMAL(6,4)) AS fator_publico
 FROM stg_loja_praca AS slp
 INNER JOIN dim_praca AS dp
     ON dp.cod_praca = slp.`CodPraca`;
