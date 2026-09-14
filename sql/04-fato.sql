@@ -121,7 +121,7 @@ END,
 # Valores negativos recebem NULL.
 # Ajusta a pontuacao para o formato decimal antes da conversao.
 CASE
-    WHEN TRIM(REPLACE(p.`ValorLiquidoPedido(R$)`, 'R$', '')) IN ('', '-')
+    WHEN TRIM(REPLACE(p.`ValorLiquidoPedido(R$)`,'R$','')) IN ('','-')
         THEN NULL
 
     WHEN p.`ValorLiquidoPedido(R$)` LIKE '%,%'
@@ -129,54 +129,90 @@ CASE
             REPLACE(
                 REPLACE(
                     REPLACE(
-                        p.`ValorLiquidoPedido(R$)`,
-                        'R$', ''
+                        REPLACE(
+                            p.`ValorLiquidoPedido(R$)`,
+                            'R$',''
+                        ),
+                        ' ',''
                     ),
-                    ' ', ''
+                    '.',''
                 ),
-                '.',
-                ''
+                ',','.'
             ) AS DECIMAL(15,2)
         )
+
+    ELSE CAST(
+        REPLACE(
+            REPLACE(
+                p.`ValorLiquidoPedido(R$)`,
+                'R$',''
+            ),
+            ' ',''
+        ) AS DECIMAL(15,2)
+    )
 END,
 
 #dias_integracao_separacao
 #Calcula a diferença de dias entre a integração do ERP e a separação do estoque
 CASE
     WHEN p.`Dt Separacao Estoque` = '' THEN NULL
-    ELSE DATEDIFF(p.`Dt Separacao Estoque`, 
-		DATE(STR_TO_DATE(p.`DtHoraIntegracaoERP`, '%m/%d/%Y %h:%i %p')))
+    ELSE DATEDIFF(
+        p.`Dt Separacao Estoque`,
+        DATE(STR_TO_DATE(
+            p.`DtHoraIntegracaoERP`,
+            '%m/%d/%Y %h:%i %p'
+        ))
+    )
 END,
 
 #dias_separacao_nota
 #Calcula a diferença de dias entre a separação do estoque e a emissão da nota fiscal
 CASE
-    WHEN p.`DtNotaFiscal` = '' OR p.`Dt Separacao Estoque` = '' THEN NULL
-    ELSE DATEDIFF(p.`DtNotaFiscal`, 
-				  p.`Dt Separacao Estoque`)
+    WHEN p.`DtNotaFiscal` = ''
+         OR p.`Dt Separacao Estoque` = ''
+        THEN NULL
+    ELSE DATEDIFF(
+        p.`DtNotaFiscal`,
+        p.`Dt Separacao Estoque`
+    )
 END,
 
 #dias_nota_despacho
 #Calcula a diferença de dias entre a emissão da nota fiscal e o despacho para a transportadora
-CASE WHEN p.`Dt_Despacho_Transportadora` = '' OR p.`DtNotaFiscal` = '' THEN NULL
-	 ELSE DATEDIFF(DATE(p.`Dt_Despacho_Transportadora`), 
-			       DATE(p.`DtNotaFiscal`))
+CASE
+    WHEN p.`Dt_Despacho_Transportadora` = ''
+         OR p.`DtNotaFiscal` = ''
+        THEN NULL
+    ELSE DATEDIFF(
+        DATE(p.`Dt_Despacho_Transportadora`),
+        DATE(p.`DtNotaFiscal`)
+    )
 END,
 
 #dias_despacho_entrega
 #Calcula a diferença de dias entre o despacho para a transportadora e a entrega ao cliente
-CASE 
-    WHEN p.`Dt_Despacho_Transportadora` = '' OR p.`DtEntregaCliente` = '' THEN NULL
-    ELSE DATEDIFF( DATE(p.`DtEntregaCliente`),
-				  DATE(p.`Dt_Despacho_Transportadora`))
+CASE
+    WHEN p.`Dt_Despacho_Transportadora` = ''
+         OR p.`DtEntregaCliente` = ''
+        THEN NULL
+    ELSE DATEDIFF(
+        DATE(p.`DtEntregaCliente`),
+        DATE(p.`Dt_Despacho_Transportadora`)
+    )
 END,
 
 #dias_total_ate_entrega
 #Calcula a diferença de dias entre a integração do ERP e a entrega ao cliente
-CASE 
-    WHEN p.`DtHoraIntegracaoERP` = '' OR p.`DtEntregaCliente` = '' THEN NULL
-    ELSE DATEDIFF( DATE(p.`DtEntregaCliente`),
-				   DATE(STR_TO_DATE(p.`DtHoraIntegracaoERP`, '%m/%d/%Y %h:%i %p'))
+CASE
+    WHEN p.`DtHoraIntegracaoERP` = ''
+         OR p.`DtEntregaCliente` = ''
+        THEN NULL
+    ELSE DATEDIFF(
+        DATE(p.`DtEntregaCliente`),
+        DATE(STR_TO_DATE(
+            p.`DtHoraIntegracaoERP`,
+            '%m/%d/%Y %h:%i %p'
+        ))
     )
 END
 
